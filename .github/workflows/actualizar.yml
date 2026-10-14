@@ -1,5 +1,5 @@
 # Todos los días a las 4:00 de Uruguay (7:00 UTC) baja la lista de
-# estaciones, talleres y gomerías (Argentina y Brasil solo los lunes).
+# estaciones, talleres y gomerías de Uruguay.
 #
 # Los archivos se publican en la rama "datos", que se reemplaza entera
 # cada vez: así el repositorio no acumula versiones viejas.
@@ -34,8 +34,9 @@ jobs:
 
       - name: Bajar lugares de OpenStreetMap
         env:
-          # Corriéndolo a mano se bajan los 3 países aunque no sea lunes
           FORZAR: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+          # Para ver el avance en vivo (si no, aparece todo junto al final)
+          PYTHONUNBUFFERED: '1'
         run: python scripts/bajar_lugares.py
 
       - name: Publicar si cambió
