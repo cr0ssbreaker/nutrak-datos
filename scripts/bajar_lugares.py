@@ -38,8 +38,21 @@ FILTROS_MOTERO = FILTROS_TODO[:-1]  # sin talleres de autos
 # Por ahora solo Uruguay. Argentina y Brasil se buscan en vivo desde la app.
 # (Para sumarlos más adelante: agregarlos acá con una "caja" sur, oeste,
 # norte, este, y los filtros que se quieran.)
+#
+# Uruguay: primero se pide "por país" (lo más prolijo). Si el servidor
+# está saturado (error 504), se pide por cuadrados de 1° que cubren el
+# país; eso trae también algo de las ciudades de frontera de Argentina y
+# Brasil (Concordia, Rivera/Livramento, Chuy/Chuí), que viene bien.
+# Lo que se saca es la zona de Buenos Aires, que cae dentro del rectángulo.
 PAISES = {
-    "uy": {"area": '["ISO3166-1"="UY"][admin_level=2]', "filtros": FILTROS_TODO, "diario": True},
+    "uy": {
+        "area": '["ISO3166-1"="UY"][admin_level=2]',
+        "caja": (-35.2, -58.6, -30.0, -53.0),
+        "tamano": 1.0,
+        "excluir": [(-35.2, -59.5, -34.05, -57.95)],  # Buenos Aires y alrededores
+        "filtros": FILTROS_TODO,
+        "diario": True,
+    },
 }
 TAMANO_CUADRADO = 4.0
 
@@ -135,26 +148,34 @@ def a_fila(el):
             tags.get("brand") or tags.get("operator") or "", tags.get("opening_hours", "")]
 
 
+def excluida(config, fila):
+    return any(z[0] <= fila[2] <= z[2] and z[1] <= fila[3] <= z[3]
+               for z in config.get("excluir", []))
+
+
 def bajar_pais(codigo, config, anteriores):
     lugares = {}
     if "area" in config:
-        elementos = consultar(consulta_de("area" + config["area"], config["filtros"], 240), 3)
-        if not elementos:
+        log(f"  {codigo}: pidiendo el país entero…")
+        elementos = consultar(consulta_de("area" + config["area"], config["filtros"], 240), 2)
+        if elementos:
+            for el in elementos:
+                fila = a_fila(el)
+                if fila:
+                    lugares[fila[0]] = fila
+            return sorted(lugares.values(), key=lambda p: p[0])
+        if "caja" not in config:
             return None
-        for el in elementos:
-            fila = a_fila(el)
-            if fila:
-                lugares[fila[0]] = fila
-        return sorted(lugares.values(), key=lambda p: p[0])
+        log(f"  {codigo}: el servidor no pudo con el país entero, pido por cuadrados")
 
-    lista = list(cuadrados(config["caja"], TAMANO_CUADRADO))
+    lista = list(cuadrados(config["caja"], config.get("tamano", TAMANO_CUADRADO)))
     fallas = []
     for i, c in enumerate(lista, 1):
         elementos, f = bajar_cuadrado(c, config["filtros"])
         fallas += f
         for el in elementos:
             fila = a_fila(el)
-            if fila:
+            if fila and not excluida(config, fila):
                 lugares[fila[0]] = fila
         log(f"  {codigo} cuadrado {i}/{len(lista)}: {len(elementos)} lugares (total {len(lugares)})")
         time.sleep(3)
