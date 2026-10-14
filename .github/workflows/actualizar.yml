@@ -1,0 +1,55 @@
+# Todos los días a las 4:00 de Uruguay (7:00 UTC) baja la lista de
+# estaciones, talleres y gomerías (Argentina y Brasil solo los lunes).
+#
+# Los archivos se publican en la rama "datos", que se reemplaza entera
+# cada vez: así el repositorio no acumula versiones viejas.
+name: Actualizar lugares
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch: # botón "Run workflow" para correrlo a mano
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Traer la lista anterior
+        run: |
+          mkdir -p salida
+          if git fetch --depth 1 origin datos; then
+            git archive FETCH_HEAD | tar -x -C salida
+          fi
+          cp salida/indice.json indice_antes.json 2>/dev/null || echo '{}' > indice_antes.json
+
+      - name: Bajar lugares de OpenStreetMap
+        env:
+          # Corriéndolo a mano se bajan los 3 países aunque no sea lunes
+          FORZAR: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+        run: python scripts/bajar_lugares.py
+
+      - name: Publicar si cambió
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if cmp -s salida/indice.json indice_antes.json; then
+            echo "Nada cambió"
+            exit 0
+          fi
+          cd salida
+          git init -q -b datos
+          git config user.name "nutrak-bot"
+          git config user.email "nutrak-bot@users.noreply.github.com"
+          git add .
+          git commit -q -m "Lugares actualizados"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git" datos
