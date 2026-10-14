@@ -1,15 +1,12 @@
-# Baja de OpenStreetMap las estaciones de servicio, talleres y gomerías
-# de Uruguay, Argentina y Brasil para la app Nutrak.
+# Baja de OpenStreetMap las estaciones de servicio, talleres de motos,
+# talleres mecánicos y gomerías de Uruguay para la app Nutrak.
+# Lo corre GitHub todos los días (ver .github/workflows/actualizar.yml).
 #
-# - Uruguay: todo (estaciones, talleres de motos, talleres mecánicos y
-#   gomerías). Se actualiza todos los días.
-# - Argentina y Brasil: lo motero (estaciones, talleres de motos y
-#   gomerías). Se actualizan los lunes (cambian poco y son grandes).
-#   Se piden provincia por provincia / estado por estado, porque un pedido
-#   por todo el país hace fallar al servidor.
+# Deja en la carpeta "salida": uy.json e indice.json (con la versión).
+# Si OpenStreetMap no responde, se deja la lista anterior.
 #
-# Deja en la carpeta "salida": uy.json, ar.json, br.json e indice.json
-# (con la versión de cada uno). Si un país falla, se deja el anterior.
+# (Está preparado para sumar otros países pidiéndolos por "cuadrados" del
+# mapa, por si algún día se quiere ampliar.)
 
 import datetime
 import hashlib
@@ -37,14 +34,18 @@ FILTROS_TODO = [
 ]
 FILTROS_MOTERO = FILTROS_TODO[:-1]  # sin talleres de autos
 
-ESTADOS_BR = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split()
-PROVINCIAS_AR = "C B K H U X W E P Y L F M N Q R A J D Z S G V T".split()
-
+# Rectángulo (sur, oeste, norte, este) que cubre cada país
+# Por ahora solo Uruguay. Argentina y Brasil se buscan en vivo desde la app.
+# (Para sumarlos más adelante: agregarlos acá con una "caja" sur, oeste,
+# norte, este, y los filtros que se quieran.)
 PAISES = {
-    "uy": {"zonas": ['["ISO3166-1"="UY"][admin_level=2]'], "filtros": FILTROS_TODO, "diario": True},
-    "ar": {"zonas": [f'["ISO3166-2"="AR-{p}"]' for p in PROVINCIAS_AR], "filtros": FILTROS_MOTERO, "diario": False},
-    "br": {"zonas": [f'["ISO3166-2"="BR-{e}"]' for e in ESTADOS_BR], "filtros": FILTROS_MOTERO, "diario": False},
+    "uy": {"area": '["ISO3166-1"="UY"][admin_level=2]', "filtros": FILTROS_TODO, "diario": True},
 }
+TAMANO_CUADRADO = 4.0
+
+
+def log(texto):
+    print(texto, flush=True)
 
 
 # 0 = estación, 1 = taller de motos, 2 = taller mecánico, 3 = gomería
@@ -59,58 +60,113 @@ def tipo_de(tags):
     return 1
 
 
-def pedir(zona, filtros):
-    consulta = "[out:json][timeout:300];\narea" + zona + "->.z;\n(\n"
-    consulta += "".join(f"  nwr{f}(area.z);\n" for f in filtros)
-    consulta += ");\nout center tags;\n"
+def consultar(consulta, intentos_por_servidor=1):
+    """Prueba los servidores; devuelve los elementos o None si todos fallan."""
     datos = urllib.parse.urlencode({"data": consulta}).encode()
-    for intento in range(3):
+    for _ in range(intentos_por_servidor):
         for servidor in SERVIDORES:
             try:
                 pedido = urllib.request.Request(
                     servidor, data=datos,
                     headers={"User-Agent": "Nutrak/1.0 (lista de lugares para motoviajeros)"},
                 )
-                with urllib.request.urlopen(pedido, timeout=360) as r:
+                with urllib.request.urlopen(pedido, timeout=200) as r:
                     respuesta = json.loads(r.read().decode("utf-8"))
                 nota = str(respuesta.get("remark", ""))
                 if "timed out" in nota or "out of memory" in nota:
-                    raise RuntimeError(nota[:100])
+                    raise RuntimeError(nota[:80])
                 if isinstance(respuesta.get("elements"), list):
                     return respuesta["elements"]
             except Exception as e:
-                print(f"  {zona} en {servidor}: {e}", file=sys.stderr)
-            time.sleep(10)
-        time.sleep(60)
+                log(f"    {servidor.split('/')[2]}: {e}")
+            time.sleep(5)
     return None
 
 
-def bajar_pais(codigo, config):
+def consulta_de(lugar, filtros, segundos):
+    texto = f"[out:json][timeout:{segundos}];\n"
+    if lugar.startswith("area"):
+        texto += lugar + "->.z;\n(\n" + "".join(f"  nwr{f}(area.z);\n" for f in filtros)
+    else:
+        texto += "(\n" + "".join(f"  nwr{f}({lugar});\n" for f in filtros)
+    return texto + ");\nout center tags;\n"
+
+
+def cuadrados(caja, tamano):
+    sur, oeste, norte, este = caja
+    lat = sur
+    while lat < norte:
+        lon = oeste
+        while lon < este:
+            yield (lat, lon, min(lat + tamano, norte), min(lon + tamano, este))
+            lon += tamano
+        lat += tamano
+
+
+def bajar_cuadrado(c, filtros, nivel=0):
+    """Devuelve (elementos, cuadrados_que_fallaron)."""
+    caja = f"{c[0]},{c[1]},{c[2]},{c[3]}"
+    elementos = consultar(consulta_de(caja, filtros, 120))
+    if elementos is not None:
+        return elementos, []
+    if nivel >= 2:
+        return [], [c]
+    # Muy pesado: lo partimos en 4
+    log(f"  partiendo {caja} en 4")
+    medio_lat, medio_lon = (c[0] + c[2]) / 2, (c[1] + c[3]) / 2
+    todos, fallas = [], []
+    for sub in [(c[0], c[1], medio_lat, medio_lon), (c[0], medio_lon, medio_lat, c[3]),
+                (medio_lat, c[1], c[2], medio_lon), (medio_lat, medio_lon, c[2], c[3])]:
+        e, f = bajar_cuadrado(sub, filtros, nivel + 1)
+        todos += e
+        fallas += f
+        time.sleep(3)
+    return todos, fallas
+
+
+def a_fila(el):
+    lat = el.get("lat", el.get("center", {}).get("lat"))
+    lon = el.get("lon", el.get("center", {}).get("lon"))
+    if lat is None or lon is None:
+        return None
+    tags = el.get("tags", {})
+    ident = f"{el['type']}/{el['id']}"
+    return [ident, tipo_de(tags), round(lat, 5), round(lon, 5), tags.get("name", ""),
+            tags.get("brand") or tags.get("operator") or "", tags.get("opening_hours", "")]
+
+
+def bajar_pais(codigo, config, anteriores):
     lugares = {}
-    for zona in config["zonas"]:
-        elementos = pedir(zona, config["filtros"])
-        if elementos is None:
-            print(f"{codigo}: falló {zona}, se deja la lista anterior")
+    if "area" in config:
+        elementos = consultar(consulta_de("area" + config["area"], config["filtros"], 240), 3)
+        if not elementos:
             return None
-        if not elementos and codigo == "uy":
-            return None  # Uruguay vacío = algo anduvo mal
         for el in elementos:
-            lat = el.get("lat", el.get("center", {}).get("lat"))
-            lon = el.get("lon", el.get("center", {}).get("lon"))
-            if lat is None or lon is None:
-                continue
-            tags = el.get("tags", {})
-            ident = f"{el['type']}/{el['id']}"
-            lugares[ident] = [
-                ident,
-                tipo_de(tags),
-                round(lat, 5),
-                round(lon, 5),
-                tags.get("name", ""),
-                tags.get("brand") or tags.get("operator") or "",
-                tags.get("opening_hours", ""),
-            ]
-        time.sleep(5)  # para no saturar el servicio gratuito
+            fila = a_fila(el)
+            if fila:
+                lugares[fila[0]] = fila
+        return sorted(lugares.values(), key=lambda p: p[0])
+
+    lista = list(cuadrados(config["caja"], TAMANO_CUADRADO))
+    fallas = []
+    for i, c in enumerate(lista, 1):
+        elementos, f = bajar_cuadrado(c, config["filtros"])
+        fallas += f
+        for el in elementos:
+            fila = a_fila(el)
+            if fila:
+                lugares[fila[0]] = fila
+        log(f"  {codigo} cuadrado {i}/{len(lista)}: {len(elementos)} lugares (total {len(lugares)})")
+        time.sleep(3)
+
+    # Zonas que fallaron: usamos lo que había antes ahí
+    for f in fallas:
+        log(f"  {codigo}: falló {f}, se usa lo anterior para esa zona")
+        for p in anteriores:
+            if f[0] <= p[2] <= f[2] and f[1] <= p[3] <= f[3]:
+                lugares.setdefault(p[0], p)
+    if not lugares:
+        return None
     return sorted(lugares.values(), key=lambda p: p[0])
 
 
@@ -122,23 +178,28 @@ def main():
         with open(ruta_indice, encoding="utf-8") as f:
             indice = json.load(f)
 
-    es_lunes = datetime.datetime.utcnow().weekday() == 0
+    es_lunes = datetime.datetime.now(datetime.timezone.utc).weekday() == 0
     forzar = os.environ.get("FORZAR") == "1"
 
     for codigo, config in PAISES.items():
         archivo = os.path.join(SALIDA, f"{codigo}.json")
         toca = config["diario"] or es_lunes or forzar or not os.path.exists(archivo)
         if not toca:
-            print(f"{codigo}: hoy no toca")
+            log(f"{codigo}: hoy no toca")
             continue
-        print(f"{codigo}: bajando {len(config['zonas'])} zona(s)…")
-        lugares = bajar_pais(codigo, config)
+        anteriores = []
+        if os.path.exists(archivo):
+            with open(archivo, encoding="utf-8") as f:
+                anteriores = json.load(f).get("p", [])
+        log(f"{codigo}: bajando…")
+        lugares = bajar_pais(codigo, config, anteriores)
         if lugares is None:
+            log(f"{codigo}: falló, se deja la lista anterior")
             continue
         huella = hashlib.sha1(json.dumps(lugares, ensure_ascii=False).encode()).hexdigest()[:12]
         cuantos = [sum(1 for p in lugares if p[1] == t) for t in range(4)]
-        print(f"{codigo}: {len(lugares)} lugares (estaciones {cuantos[0]}, talleres de motos "
-              f"{cuantos[1]}, talleres {cuantos[2]}, gomerías {cuantos[3]}) versión {huella}")
+        log(f"{codigo}: {len(lugares)} lugares (estaciones {cuantos[0]}, talleres de motos "
+            f"{cuantos[1]}, talleres {cuantos[2]}, gomerías {cuantos[3]}) versión {huella}")
         if indice.get(codigo) == huella:
             continue
         with open(archivo, "w", encoding="utf-8") as f:
