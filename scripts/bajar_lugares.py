@@ -24,15 +24,25 @@ SERVIDORES = [
 ]
 SALIDA = "salida"
 
-FILTROS_TODO = [
+FILTROS_MOTERO = [
     '["amenity"="fuel"]',
     '["shop"="motorcycle"]',
     '["shop"="motorcycle_repair"]',
     '["craft"="motorcycle_repair"]',
     '["shop"="tyres"]',
-    '["shop"="car_repair"]',
 ]
-FILTROS_MOTERO = FILTROS_TODO[:-1]  # sin talleres de autos
+# Lugares moteros: miradores, campings, hospedajes y peajes
+FILTROS_LUGARES = [
+    '["tourism"="viewpoint"]',
+    '["tourism"="camp_site"]',
+    '["tourism"="caravan_site"]',
+    '["tourism"="hotel"]',
+    '["tourism"="motel"]',
+    '["tourism"="hostel"]',
+    '["tourism"="guest_house"]',
+    '["barrier"="toll_booth"]',
+]
+FILTROS_TODO = FILTROS_MOTERO + ['["shop"="car_repair"]'] + FILTROS_LUGARES
 
 # Rectángulo (sur, oeste, norte, este) que cubre cada país
 # Por ahora solo Uruguay. Argentina y Brasil se buscan en vivo desde la app.
@@ -61,10 +71,21 @@ def log(texto):
     print(texto, flush=True)
 
 
-# 0 = estación, 1 = taller de motos, 2 = taller mecánico, 3 = gomería
+# 0 = estación, 1 = taller de motos, 2 = taller mecánico, 3 = gomería,
+# 4 = mirador, 5 = camping, 6 = hospedaje, 7 = peaje
+# (tiene que coincidir con el orden de TipoPunto en la app)
 def tipo_de(tags):
     if tags.get("amenity") == "fuel":
         return 0
+    if tags.get("barrier") == "toll_booth":
+        return 7
+    turismo = tags.get("tourism")
+    if turismo == "viewpoint":
+        return 4
+    if turismo in ("camp_site", "caravan_site"):
+        return 5
+    if turismo:
+        return 6
     shop = tags.get("shop")
     if shop == "tyres":
         return 3
@@ -218,9 +239,10 @@ def main():
             log(f"{codigo}: falló, se deja la lista anterior")
             continue
         huella = hashlib.sha1(json.dumps(lugares, ensure_ascii=False).encode()).hexdigest()[:12]
-        cuantos = [sum(1 for p in lugares if p[1] == t) for t in range(4)]
+        cuantos = [sum(1 for p in lugares if p[1] == t) for t in range(8)]
         log(f"{codigo}: {len(lugares)} lugares (estaciones {cuantos[0]}, talleres de motos "
-            f"{cuantos[1]}, talleres {cuantos[2]}, gomerías {cuantos[3]}) versión {huella}")
+            f"{cuantos[1]}, talleres {cuantos[2]}, gomerías {cuantos[3]}, miradores {cuantos[4]}, "
+            f"campings {cuantos[5]}, hospedajes {cuantos[6]}, peajes {cuantos[7]}) versión {huella}")
         if indice.get(codigo) == huella:
             continue
         with open(archivo, "w", encoding="utf-8") as f:
