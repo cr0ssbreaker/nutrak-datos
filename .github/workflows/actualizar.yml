@@ -1,5 +1,6 @@
 # Todos los días a las 4:00 de Uruguay (7:00 UTC) baja la lista de
-# estaciones, talleres y gomerías de Uruguay.
+# estaciones, talleres y gomerías de Uruguay. Además, el día 1 de cada
+# mes rehace "uruguay.json" (departamentos y rutas para Mi Uruguay).
 #
 # Los archivos se publican en la rama "datos", que se reemplaza entera
 # cada vez: así el repositorio no acumula versiones viejas.
@@ -31,6 +32,7 @@ jobs:
             git archive FETCH_HEAD | tar -x -C salida
           fi
           cp salida/indice.json indice_antes.json 2>/dev/null || echo '{}' > indice_antes.json
+          cp salida/uruguay.json uruguay_antes.json 2>/dev/null || echo '{}' > uruguay_antes.json
 
       - name: Bajar lugares de OpenStreetMap
         env:
@@ -39,11 +41,19 @@ jobs:
           PYTHONUNBUFFERED: '1'
         run: python scripts/bajar_lugares.py
 
+      - name: Mi Uruguay (departamentos y rutas nacionales)
+        env:
+          FORZAR: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+          PYTHONUNBUFFERED: '1'
+        run: |
+          pip install shapely
+          python scripts/bajar_uruguay.py
+
       - name: Publicar si cambió
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if cmp -s salida/indice.json indice_antes.json; then
+          if cmp -s salida/indice.json indice_antes.json && cmp -s salida/uruguay.json uruguay_antes.json; then
             echo "Nada cambió"
             exit 0
           fi
