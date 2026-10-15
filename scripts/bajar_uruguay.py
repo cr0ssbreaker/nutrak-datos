@@ -4,6 +4,8 @@
 #   - Los 19 departamentos (contorno simplificado) y cuántos cuadraditos
 #     de 2 km tiene cada uno.
 #   - Las rutas nacionales: un punto cada 500 m de cada ruta.
+#   - Argentina y Brasil (contorno simplificado, de Natural Earth) para los
+#     sellos de países del Pasaporte motero.
 #
 # Estas cosas casi no cambian: se rehace una vez por mes (el día 1), o
 # cuando se corre a mano el workflow, o si todavía no existe.
@@ -20,7 +22,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from shapely.geometry import LineString, Point, Polygon
+from shapely.geometry import LineString, Point, Polygon, shape
 from shapely.ops import polygonize, unary_union
 from shapely.prepared import prep
 
@@ -37,6 +39,10 @@ CELDA = 2000.0  # metros
 LAT0 = -32.5  # latitud de referencia de Uruguay
 KY = 110574.0  # metros por grado de latitud
 KX = 111320.0 * math.cos(math.radians(LAT0))  # metros por grado de longitud
+
+PAISES_URL = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
+              "master/geojson/ne_50m_admin_0_countries.geojson")
+PAISES = {"ARG": ("AR", "Argentina"), "BRA": ("BR", "Brasil")}
 
 SIMPLIFICAR = 0.004  # grados (~400 m): contorno liviano pero fiel
 PASO_RUTA = 500.0  # metros entre puntos de una ruta
@@ -144,6 +150,34 @@ def anillos(forma):
     return salida
 
 
+# ---------- Países vecinos ----------
+
+def bajar_paises():
+    log("Países vecinos…")
+    pedido = urllib.request.Request(PAISES_URL, headers={"User-Agent": "Nutrak/1.0"})
+    with urllib.request.urlopen(pedido, timeout=300) as r:
+        datos = json.loads(r.read().decode("utf-8"))
+    salida = []
+    for f in datos.get("features", []):
+        props = f.get("properties", {})
+        clave = props.get("ADM0_A3") or props.get("ISO_A3")
+        if clave not in PAISES:
+            continue
+        codigo, nombre = PAISES[clave]
+        forma = shape(f["geometry"]).simplify(0.01, preserve_topology=True)
+        partes = list(forma.geoms) if forma.geom_type == "MultiPolygon" else [forma]
+        anillos = [
+            [[round(y, 3), round(x, 3)] for x, y in p.exterior.coords]
+            for p in partes
+            if p.area > 0.05
+        ]
+        salida.append({"codigo": codigo, "nombre": nombre, "anillos": anillos})
+        log(f"  {nombre}: {sum(len(a) for a in anillos)} puntos")
+    if len(salida) < 2:
+        raise RuntimeError("No llegaron Argentina y Brasil")
+    return salida
+
+
 # ---------- Rutas nacionales ----------
 
 def bajar_rutas(todo):
@@ -200,6 +234,11 @@ def main():
         total, por_depto = contar_celdas(departamentos)
         todo = unary_union([f for _, f in departamentos])
         rutas = bajar_rutas(todo)
+        try:
+            paises = bajar_paises()
+        except Exception as e:  # noqa: BLE001
+            log(f"  (sin países vecinos: {e})")
+            paises = []
     except Exception as e:  # noqa: BLE001
         log(f"No se pudo armar Mi Uruguay ({e}). Queda el archivo anterior.")
         return
@@ -213,6 +252,7 @@ def main():
             for n, f in sorted(departamentos)
         ],
         "rutas": rutas,
+        "paises": paises,
     }
     os.makedirs(SALIDA, exist_ok=True)
     with open(ARCHIVO, "w", encoding="utf-8") as f:
