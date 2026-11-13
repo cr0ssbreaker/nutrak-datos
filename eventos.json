@@ -1,0 +1,342 @@
+{
+ "actualizado": "2026-10-19",
+ "eventos": [
+  {
+   "id": "2026-10-23-4o-motoencuentro",
+   "dias": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25"
+   ],
+   "nombre": "4º Motoencuentro",
+   "lugar": "Estación Las Flores - Maldonado",
+   "organiza": "Viajeros de América"
+  },
+  {
+   "id": "2026-10-25-rodada-dia-del-motociclista",
+   "dias": [
+    "2026-10-25"
+   ],
+   "nombre": "Rodada Día del Motociclista",
+   "lugar": "Desde Montevideo hasta San José",
+   "organiza": "Montevideo Choppers",
+   "lat": -34.3375,
+   "lng": -56.7136
+  },
+  {
+   "id": "2026-10-30-7o-motoencuentro",
+   "dias": [
+    "2026-10-30",
+    "2026-10-31"
+   ],
+   "nombre": "7º Motoencuentro",
+   "lugar": "Nueva Helvecia - Colonia",
+   "organiza": "Iron Horse",
+   "lat": -34.3,
+   "lng": -57.2333
+  },
+  {
+   "id": "2026-10-31-edicion-halloween",
+   "dias": [
+    "2026-10-31"
+   ],
+   "nombre": "Edición Halloween",
+   "lugar": "The Farm Garage – Las Piedras",
+   "organiza": "Nacho Spotting",
+   "lat": -34.7302,
+   "lng": -56.2192
+  },
+  {
+   "id": "2026-11-07-colocacion-placas-en-memorial",
+   "dias": [
+    "2026-11-07"
+   ],
+   "nombre": "Colocación placas en memorial",
+   "lugar": "Valle Edén – Tacuarembó",
+   "organiza": "Comisión Memorial Motociclistas Caídos",
+   "lat": -31.8213,
+   "lng": -56.1751
+  },
+  {
+   "id": "2026-11-07-reunion-aniversario",
+   "dias": [
+    "2026-11-07"
+   ],
+   "nombre": "Reunión aniversario",
+   "lugar": "Parador el Amanecer – Colonia del Sacramento",
+   "organiza": "Deliler MG",
+   "lat": -34.471,
+   "lng": -57.844
+  },
+  {
+   "id": "2026-11-07-expo-aero-moto",
+   "dias": [
+    "2026-11-07",
+    "2026-11-08"
+   ],
+   "nombre": "Expo Aero Moto",
+   "lugar": "Aero Club de Minas - Lavalleja",
+   "organiza": "Moteros Minuanos",
+   "lat": -34.376,
+   "lng": -55.237
+  },
+  {
+   "id": "2026-11-12-22o-mega-show-melo",
+   "dias": [
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-14",
+    "2026-11-15"
+   ],
+   "nombre": "22º Mega Show Melo",
+   "lugar": "Melo - Cerro Largo",
+   "organiza": "Moto Maniacos",
+   "lat": -32.37,
+   "lng": -54.1675
+  },
+  {
+   "id": "2026-11-13-12o-expo-moto",
+   "dias": [
+    "2026-11-13",
+    "2026-11-14",
+    "2026-11-15"
+   ],
+   "nombre": "12º Expo Moto",
+   "lugar": "Gualeguaychú - Argentina",
+   "organiza": "Expo Moto",
+   "lat": -33.0094,
+   "lng": -58.5172
+  },
+  {
+   "id": "2026-11-14-aniversario-lama",
+   "dias": [
+    "2026-11-14",
+    "2026-11-15"
+   ],
+   "nombre": "Aniversario LAMA",
+   "lugar": "Paso de los Toros - Tacuarembó",
+   "organiza": "LAMA CU.PE",
+   "lat": -32.817,
+   "lng": -56.511
+  },
+  {
+   "id": "2026-11-15-motoencuentro",
+   "dias": [
+    "2026-11-15"
+   ],
+   "nombre": "Motoencuentro",
+   "lugar": "Pegado al Castillo de Piria – Piriápolis",
+   "organiza": "Amigos del Asfalto",
+   "lat": -34.864,
+   "lng": -55.278
+  },
+  {
+   "id": "2026-11-21-2o-moto-juntada",
+   "dias": [
+    "2026-11-21"
+   ],
+   "nombre": "2º Moto Juntada",
+   "lugar": "San Luis - Canelones",
+   "organiza": "Alfred"
+  },
+  {
+   "id": "2026-11-28-sound-klasiks",
+   "dias": [
+    "2026-11-28"
+   ],
+   "nombre": "Sound Klasiks",
+   "lugar": "Parque Batlle, ciudad de Paso de los Toros",
+   "organiza": "Sound K",
+   "lat": -32.817,
+   "lng": -56.511
+  },
+  {
+   "id": "2026-12-05-moto-juntada",
+   "dias": [
+    "2026-12-05"
+   ],
+   "nombre": "Moto Juntada",
+   "lugar": "Dolores - Soriano",
+   "organiza": "",
+   "lat": -33.5333,
+   "lng": -58.2167
+  },
+  {
+   "id": "2026-12-05-motoencuentro",
+   "dias": [
+    "2026-12-05"
+   ],
+   "nombre": "Motoencuentro",
+   "lugar": "Parque Rodó – Minas - Lavalleja",
+   "organiza": "Moto Fest Minuano",
+   "lat": -34.376,
+   "lng": -55.237
+  },
+  {
+   "id": "2026-12-06-moto-asado",
+   "dias": [
+    "2026-12-06"
+   ],
+   "nombre": "Moto Asado",
+   "lugar": "Lugar a confirmar",
+   "organiza": "Amigos del Santoral"
+  },
+  {
+   "id": "2026-12-12-19o-aniversario",
+   "dias": [
+    "2026-12-12"
+   ],
+   "nombre": "19º Aniversario",
+   "lugar": "Santa Rosa - Canelones",
+   "organiza": "Locos por las Viejas MC",
+   "lat": -34.5,
+   "lng": -56.04
+  },
+  {
+   "id": "2026-12-19-11o-rodada-y-encuentro",
+   "dias": [
+    "2026-12-19",
+    "2026-12-20"
+   ],
+   "nombre": "11º Rodada y encuentro",
+   "lugar": "Desde Montevideo hasta Piriápolis",
+   "organiza": "Montevideo Choppers",
+   "lat": -34.864,
+   "lng": -55.274
+  },
+  {
+   "id": "2027-01-14-26o-motofest-jaguarao",
+   "dias": [
+    "2027-01-14",
+    "2027-01-15",
+    "2027-01-16",
+    "2027-01-17"
+   ],
+   "nombre": "26º Motofest Jaguarao",
+   "lugar": "Yaguarón - Brasil",
+   "organiza": "Km Final MG",
+   "lat": -32.566,
+   "lng": -53.376
+  },
+  {
+   "id": "2027-01-16-1o-moto-acampada",
+   "dias": [
+    "2027-01-16"
+   ],
+   "nombre": "1º Moto acampada",
+   "lugar": "Calle 13 y rambla – Santa Ana - Canelones",
+   "organiza": "Bisontes MC"
+  },
+  {
+   "id": "2027-01-23-23o-aniversario-lama",
+   "dias": [
+    "2027-01-23",
+    "2027-01-24"
+   ],
+   "nombre": "23º Aniversario LAMA",
+   "lugar": "Castillo de Piria - Piriápolis",
+   "organiza": "LAMA Montevideo",
+   "lat": -34.858,
+   "lng": -55.283
+  },
+  {
+   "id": "2027-02-04-20o-moto-acampada",
+   "dias": [
+    "2027-02-04",
+    "2027-02-05",
+    "2027-02-06",
+    "2027-02-07"
+   ],
+   "nombre": "20º Moto Acampada",
+   "lugar": "Valle Edén - Tacuarembó",
+   "organiza": "Panteras del Asfalto",
+   "lat": -31.8213,
+   "lng": -56.1751
+  },
+  {
+   "id": "2027-02-06-3o-aniversario",
+   "dias": [
+    "2027-02-06"
+   ],
+   "nombre": "3º Aniversario",
+   "lugar": "Colonia Wilson - San José",
+   "organiza": "Demonios Descarrilados"
+  },
+  {
+   "id": "2027-02-12-motoencuentro",
+   "dias": [
+    "2027-02-12",
+    "2027-02-13",
+    "2027-02-14"
+   ],
+   "nombre": "Motoencuentro",
+   "lugar": "Quincho Municipal - Florida",
+   "organiza": "Abejas Ruteras MG",
+   "lat": -34.099,
+   "lng": -56.215
+  },
+  {
+   "id": "2027-02-19-2o-expo-moto-salon",
+   "dias": [
+    "2027-02-19",
+    "2027-02-20",
+    "2027-02-21"
+   ],
+   "nombre": "2º Expo Moto Salón",
+   "lugar": "Centro de Convenciones – Punta del Este",
+   "organiza": "Expo Moto",
+   "lat": -34.938,
+   "lng": -54.94
+  },
+  {
+   "id": "2027-03-05-10o-venga-motos",
+   "dias": [
+    "2027-03-05",
+    "2027-03-06",
+    "2027-03-07"
+   ],
+   "nombre": "10º Venga Motos",
+   "lugar": "Santa Catalina – Cardona - Soriano",
+   "organiza": "Vengadores del Asfalto",
+   "lat": -33.872,
+   "lng": -57.374
+  },
+  {
+   "id": "2027-03-12-5o-aniversario",
+   "dias": [
+    "2027-03-12",
+    "2027-03-13",
+    "2027-03-14"
+   ],
+   "nombre": "5º Aniversario",
+   "lugar": "San José de Mayo",
+   "organiza": "Estruendo MG",
+   "lat": -34.3375,
+   "lng": -56.7136
+  },
+  {
+   "id": "2027-04-08-12o-motoencuentro",
+   "dias": [
+    "2027-04-08",
+    "2027-04-09",
+    "2027-04-10",
+    "2027-04-11"
+   ],
+   "nombre": "12º Motoencuentro",
+   "lugar": "Local Asociación Agropecuaria - Artigas",
+   "organiza": "Locos del Asfalto - AMA",
+   "lat": -30.401,
+   "lng": -56.467
+  },
+  {
+   "id": "2027-10-02-bike-builder",
+   "dias": [
+    "2027-10-02",
+    "2027-10-03"
+   ],
+   "nombre": "Bike Builder",
+   "lugar": "Museo y Parque Fernando García – Montevideo",
+   "organiza": "Matias Zabaleta"
+  }
+ ]
+}
